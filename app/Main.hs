@@ -2,5 +2,8 @@ module Main (main) where
 
 import Lib
 
+import Network.Wai.Handler.Warp
+
 main :: IO ()
-main = someFunc
+main = do
+    run 8000 app
