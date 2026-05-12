@@ -1,0 +1,5 @@
+root = "."
+
+[[storages]]
+uri = "private"
+path = "/home/anhgelus"

@@ -28,6 +28,7 @@ dependencies:
 - containers
 - text
 - toml-parser
+- mime-types
 
 ghc-options:
 - -Wall

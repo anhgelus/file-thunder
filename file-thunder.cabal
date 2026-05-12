@@ -40,6 +40,7 @@ library
     , bytestring
     , containers
     , http-types
+    , mime-types
     , text
     , toml-parser
     , wai
@@ -63,6 +64,7 @@ executable file-thunder-exe
     , containers
     , file-thunder
     , http-types
+    , mime-types
     , text
     , toml-parser
     , wai
@@ -85,6 +87,7 @@ test-suite file-thunder-test
     , containers
     , file-thunder
     , http-types
+    , mime-types
     , text
     , toml-parser
     , wai
