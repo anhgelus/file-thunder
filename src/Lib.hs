@@ -1,18 +1,27 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Lib (
-    someFunc,
     app,
+    storageMiddleware,
 ) where
 
+import Data.List (uncons)
+import qualified Data.Map.Strict as Map
+import Data.Text (Text)
 import Network.HTTP.Types.Status
 import Network.Wai
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
-
 app :: Application
 app req respond = do
-    (putStrLn "Allocating scarce resource")
-    (putStrLn "Cleaning up")
-    (respond $ responseLBS status200 [] "Hello World")
+    print $ pathInfo req
+    respond $ responseLBS status200 [] "uwu"
+
+storageMiddleware :: Text -> Map.Map Text Text -> Middleware
+storageMiddleware def stor next req resp =
+    next
+        req
+            { pathInfo = case uncons (pathInfo req) of
+                Just (key, t) -> case Map.lookup key stor of
+                    Just v -> v : t
+                    Nothing -> def : key : t
+                Nothing -> [def]
+            }
+        resp

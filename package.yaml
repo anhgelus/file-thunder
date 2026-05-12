@@ -24,6 +24,9 @@ dependencies:
 - wai
 - warp
 - http-types
+- bytestring
+- containers
+- text
 
 ghc-options:
 - -Wall
@@ -51,8 +54,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - file-thunder
-  default-extensions:
-  - OverloadedStrings
+    default-extensions:
+    - OverloadedStrings
 
 tests:
   file-thunder-test:
