@@ -8,7 +8,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
 import Network.HTTP.Types (hContentType)
 import Network.HTTP.Types.Status
-import Network.Mime (MimeType, defaultMimeMap, defaultMimeType)
+import Network.Mime (MimeType, defaultMimeLookup, defaultMimeType)
 import Network.Wai
 
 app :: Application
@@ -48,8 +48,4 @@ storageMiddleware def stor next req resp =
 getContentType :: [T.Text] -> MimeType
 getContentType path = case unsnoc path of
     Nothing -> defaultMimeType
-    Just (_, f) -> case unsnoc $ T.splitOn "." f of
-        Nothing -> defaultMimeType
-        Just (_, ext) -> case Map.lookup ext defaultMimeMap of
-            Nothing -> defaultMimeType
-            Just t -> t
+    Just (_, f) -> defaultMimeLookup f
