@@ -14,7 +14,9 @@ app req respond = do
     print $ pathInfo req
     respond $ responseLBS status200 [] "uwu"
 
-storageMiddleware :: Text -> Map.Map Text Text -> Middleware
+type Storage = Map.Map Text Text
+
+storageMiddleware :: Text -> Storage -> Middleware
 storageMiddleware def stor next req resp =
     next
         req

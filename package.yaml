@@ -27,6 +27,7 @@ dependencies:
 - bytestring
 - containers
 - text
+- toml-parser
 
 ghc-options:
 - -Wall
