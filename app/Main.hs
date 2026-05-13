@@ -41,7 +41,7 @@ main = do
         Just w -> putStrLn $ intercalate "\n" w
         Nothing -> putStrLn "Config loaded"
     let cfg = config res
-    run 8000 $ storageMiddleware (root cfg) (loadStorages $ storages cfg) app
+    run 8000 $ app $ realPath (root cfg) (loadStorages $ storages cfg)
 
 data ConfigRes = ConfigRes {config :: Config, warn :: Maybe [String]}
 

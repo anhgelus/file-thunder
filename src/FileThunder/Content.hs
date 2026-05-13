@@ -5,6 +5,7 @@ module FileThunder.Content (
 
 import Data.Text
 import Lucid
+import Network.Wai (Request (pathInfo))
 
 data Page = Page {title :: Text, content :: Html ()}
 
@@ -21,17 +22,20 @@ baseHtml page =
 
 data ContentInfo = ContentInfo {directory :: Bool, path :: FilePath}
 
-indexHtml :: Text -> [ContentInfo] -> Html ()
-indexHtml uri files =
-    baseHtml
-        Page
-            { title = uri
-            , content = do
-                h1_ $ toHtml $ "Index of " <> uri
-                listHtml files ""
-            }
+indexHtml :: Request -> [ContentInfo] -> Html ()
+indexHtml req files =
+    let a = intercalate "/" (pathInfo req)
+        b = if isSuffixOf "/" a then a else a <> "/"
+        uri = if isPrefixOf "/" b then b else "/" <> b
+     in baseHtml
+            Page
+                { title = uri
+                , content = do
+                    h1_ $ toHtml $ "Index of " <> uri
+                    listHtml "" uri files
+                }
 
-listHtml :: [ContentInfo] -> Html () -> Html ()
-listHtml files acc = case files of
-    v : t -> listHtml t ((p_ $ toHtml $ path v) <> acc)
+listHtml :: Html () -> Text -> [ContentInfo] -> Html ()
+listHtml acc context files = case files of
+    v : t -> listHtml ((a_ [href_ $ context <> (pack $ path v)] $ toHtml $ path v) <> acc) context t
     [] -> acc
