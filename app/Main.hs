@@ -4,7 +4,7 @@
 
 module Main (main) where
 
-import Lib
+import FileThunder
 
 import Control.Exception (throw)
 import Data.List (intercalate, uncons)
@@ -33,10 +33,10 @@ data Storage = Storage {uri :: T.Text, path :: T.Text}
 main :: IO ()
 main = do
     args <- getArgs
-    raw <- readFile $ case uncons args of
+    file <- readFile $ case uncons args of
         Just (f, _) -> f
         Nothing -> "/etc/thunderd.toml"
-    let res = loadConfig $ T.pack raw
+    let res = loadConfig file
     case warn res of
         Just w -> putStrLn $ intercalate "\n" w
         Nothing -> putStrLn "Config loaded"
@@ -45,8 +45,8 @@ main = do
 
 data ConfigRes = ConfigRes {config :: Config, warn :: Maybe [String]}
 
-loadConfig :: T.Text -> ConfigRes
-loadConfig p = case Toml.decode p of
+loadConfig :: FilePath -> ConfigRes
+loadConfig file = case Toml.decode $ T.pack file of
     Success [] v -> ConfigRes{config = v, warn = Nothing}
     Success w v -> ConfigRes{config = v, warn = Just w}
     Failure err -> throw $ userError $ intercalate "\n" err

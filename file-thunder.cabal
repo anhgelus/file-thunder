@@ -25,7 +25,7 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      FileThunder
   other-modules:
       Paths_file_thunder
   autogen-modules:

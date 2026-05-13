@@ -1,4 +1,4 @@
-module Lib (
+module FileThunder (
     app,
     storageMiddleware,
 ) where
@@ -48,4 +48,4 @@ storageMiddleware def stor next req resp =
 getContentType :: [T.Text] -> MimeType
 getContentType path = case unsnoc path of
     Nothing -> defaultMimeType
-    Just (_, f) -> defaultMimeLookup f
+    Just (_, f) -> if T.any (\c -> c == '.') f then defaultMimeLookup f else "text/plain"
