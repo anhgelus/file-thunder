@@ -22,13 +22,13 @@ import Toml.Schema (
     ToValue,
  )
 
-data Config = Config {root :: T.Text, storages :: Maybe [Storage]}
+data Config = Config {root :: T.Text, storages :: Maybe [CfgStorage]}
     deriving (Eq, Show, Generic)
     deriving (ToTable, ToValue, FromValue) via GenericTomlTable Config
 
-data Storage = Storage {uri :: T.Text, path :: T.Text}
+data CfgStorage = CfgStorage {uri :: T.Text, path :: T.Text}
     deriving (Eq, Show, Generic)
-    deriving (ToTable, ToValue, FromValue) via GenericTomlTable Storage
+    deriving (ToTable, ToValue, FromValue) via GenericTomlTable CfgStorage
 
 main :: IO ()
 main = do
@@ -51,7 +51,7 @@ loadConfig file = case Toml.decode $ T.pack file of
     Success w v -> ConfigRes{config = v, warn = Just w}
     Failure err -> throw $ userError $ intercalate "\n" err
 
-loadStorages :: Maybe [Storage] -> (Map.Map T.Text T.Text)
+loadStorages :: Maybe [CfgStorage] -> Storage
 loadStorages stors = case stors of
     Just storage -> Map.fromList $ map (\s -> ((uri s), (path s))) storage
     Nothing -> Map.empty

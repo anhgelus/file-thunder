@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       FileThunder
+      FileThunder.Content
   other-modules:
       Paths_file_thunder
   autogen-modules:
@@ -39,7 +40,9 @@ library
       base >=4.7 && <5
     , bytestring
     , containers
+    , directory
     , http-types
+    , lucid
     , mime-types
     , text
     , toml-parser
@@ -62,8 +65,10 @@ executable file-thunder-exe
       base >=4.7 && <5
     , bytestring
     , containers
+    , directory
     , file-thunder
     , http-types
+    , lucid
     , mime-types
     , text
     , toml-parser
@@ -85,8 +90,10 @@ test-suite file-thunder-test
       base >=4.7 && <5
     , bytestring
     , containers
+    , directory
     , file-thunder
     , http-types
+    , lucid
     , mime-types
     , text
     , toml-parser
