@@ -13,15 +13,20 @@ import Network.HTTP.Types (hContentType)
 import Network.HTTP.Types.Status
 import Network.Mime (MimeType, defaultMimeLookup, defaultMimeType)
 import Network.Wai
-import System.Directory (doesFileExist, listDirectory)
+import System.Directory (doesFileExist, doesPathExist, listDirectory)
 
 app :: (Request -> [T.Text]) -> Application
 app stor req respond = do
     let p = stor req
     let fullPath = T.unpack $ T.intercalate "/" p
-    exists <- doesFileExist fullPath
-    let handle = if exists then handleFile else handleDir
-    handle req p fullPath >>= respond
+    valid <- doesPathExist fullPath
+    if valid
+        then do
+            exists <- doesFileExist fullPath
+            let handle = if exists then handleFile else handleDir
+            handle req p fullPath >>= respond
+        else
+            respond $ responseLBS status404 [] "not found"
 
 type ReqHandler = Request -> [T.Text] -> FilePath -> IO Response
 
@@ -42,8 +47,7 @@ handleDir req _p fullPath = do
 generateContentInfo :: [ContentInfo] -> [FilePath] -> IO [ContentInfo]
 generateContentInfo acc ps = case ps of
     p : t ->
-        doesFileExist p >>= \a ->
-            generateContentInfo (ContentInfo{path = p, directory = not a} : acc) t
+        doesFileExist p >>= \b -> generateContentInfo (ContentInfo{path = p, directory = not b} : acc) t
     [] -> pure acc
 
 type Uri = T.Text
