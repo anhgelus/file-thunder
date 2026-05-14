@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       FileThunder
+      FileThunder.Auth
       FileThunder.Content
   other-modules:
       Paths_file_thunder
@@ -37,14 +38,19 @@ library
       OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , base64
     , bytestring
     , containers
+    , crypton
     , directory
     , http-types
     , lucid
+    , memory
     , mime-types
     , text
+    , time
     , toml-parser
     , wai
     , warp
@@ -62,15 +68,20 @@ executable file-thunder-exe
       OverloadedStrings
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , base64
     , bytestring
     , containers
+    , crypton
     , directory
     , file-thunder
     , http-types
     , lucid
+    , memory
     , mime-types
     , text
+    , time
     , toml-parser
     , wai
     , warp
@@ -87,15 +98,20 @@ test-suite file-thunder-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , base64
     , bytestring
     , containers
+    , crypton
     , directory
     , file-thunder
     , http-types
     , lucid
+    , memory
     , mime-types
     , text
+    , time
     , toml-parser
     , wai
     , warp
