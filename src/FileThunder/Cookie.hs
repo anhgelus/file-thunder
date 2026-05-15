@@ -3,6 +3,7 @@ module FileThunder.Cookie (parseCookies) where
 import qualified Data.Map as M
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
+import Network.HTTP.Types (hCookie)
 import Network.Wai (Request (requestHeaders))
 
 type Cookies = M.Map T.Text T.Text
@@ -12,7 +13,7 @@ parseCookies req = case parseCookieHeaders M.empty cookieH of
     Left _ -> M.empty
     Right v -> v
   where
-    cookieH = map (\(_, v) -> decodeUtf8 v) $ filter (\(h, _) -> h == "Cookie") $ requestHeaders req
+    cookieH = map (\(_, v) -> decodeUtf8 v) $ filter (\(h, _) -> h == hCookie) $ requestHeaders req
 
 data ParseCookieError = NotACookie T.Text deriving (Show)
 

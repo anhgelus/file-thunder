@@ -28,6 +28,7 @@ library
       FileThunder
       FileThunder.Auth
       FileThunder.Auth.Jwt
+      FileThunder.Auth.Password
       FileThunder.Content
       FileThunder.Cookie
       FileThunder.Storage
