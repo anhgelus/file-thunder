@@ -5,9 +5,13 @@ module FileThunder.Auth.Jwt (
     Jwt (header, payload),
     JwtHeader (typ),
     JwtPayload (iat, exp, user),
+    WithJwt (..),
     createJwt,
     decodeJwt,
 ) where
+
+import FileThunder.Auth (Account (..), Auth (login))
+import FileThunder.Cookie (parseCookies)
 
 import Crypto.Hash (Digest, SHA3_512, digestFromByteString)
 import Crypto.MAC.HMAC (HMAC (HMAC, hmacGetDigest), hmac)
@@ -18,7 +22,7 @@ import Data.ByteString.Base64.URL
 import qualified Data.ByteString.Char8 as BS
 import Data.Int (Int64)
 import Data.List (uncons)
-import Data.Text (Text)
+import qualified Data.Map as M
 import qualified Data.Text as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Time.Clock.System (SystemTime (systemSeconds), getSystemTime)
@@ -33,15 +37,24 @@ data JwtPayload = JwtPayload {iat :: Int64, exp :: Int64, user :: T.Text} derivi
 instance ToJSON JwtPayload
 instance FromJSON JwtPayload
 
-data Jwt = Jwt {header :: JwtHeader, payload :: JwtPayload, secret :: Text} deriving (Show)
+data Jwt = Jwt {header :: JwtHeader, payload :: JwtPayload} deriving (Show)
 
-createJwt :: T.Text -> T.Text -> Int64 -> IO Jwt
-createJwt sec u days = do
+data WithJwt = WithJwt {secret :: T.Text}
+
+instance Auth WithJwt where
+    login w req = case M.lookup "auth" (parseCookies req) of
+        Nothing -> pure Nothing
+        Just raw ->
+            (\j -> j >>= (\jwt -> Just Account{name = user $ payload jwt}))
+                <$> decodeJwt (secret w) raw
+
+createJwt :: T.Text -> Int64 -> IO Jwt
+createJwt u days = do
     let h = JwtHeader{typ = "jwt"}
     now <- systemSeconds <$> getSystemTime
     let expire = now + days * 1
     let p = JwtPayload{user = u, iat = now, exp = expire}
-    pure Jwt{header = h, payload = p, secret = sec}
+    pure Jwt{header = h, payload = p}
 
 encode64 :: BS.ByteString -> T.Text
 encode64 v = extractBase64 $ encodeBase64Unpadded v
@@ -52,11 +65,11 @@ encodePart v = encode64 . BS.toStrict $ encode v
 encodeJwtNoSign :: Jwt -> T.Text
 encodeJwtNoSign jwt = (encodePart $ header jwt) <> "." <> (encodePart $ payload jwt)
 
-encodeJwt :: Jwt -> T.Text
-encodeJwt jwt = base <> "." <> s
+encodeJwt :: T.Text -> Jwt -> T.Text
+encodeJwt sec jwt = base <> "." <> s
   where
     base = encodeJwtNoSign jwt
-    s = encode64 . BS.pack . show . hmacGetDigest $ signJwt (secret jwt) (Left base)
+    s = encode64 . BS.pack . show . hmacGetDigest $ signJwt sec (Left base)
 
 decodeJwt :: T.Text -> T.Text -> IO (Maybe Jwt)
 decodeJwt sec raw =
@@ -77,7 +90,7 @@ parseJwt sec hder pload s =
             Just p -> case decodedSign of
                 Nothing -> pure Nothing
                 Just v ->
-                    let jwt = Jwt{header = h, payload = p, secret = sec}
+                    let jwt = Jwt{header = h, payload = p}
                      in do
                             ver <- verifyJwt sec jwt (HMAC v)
                             if ver then pure $ Just jwt else pure Nothing

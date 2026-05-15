@@ -1,8 +1,8 @@
 module FileThunder.Auth (
     Permissions,
-    Account (name),
+    Account (..),
     Permission (..),
-    Auth,
+    Auth (login),
     connect,
     notConnected,
     defaultPermissions,
@@ -15,7 +15,7 @@ import Data.Text (Text)
 import Network.Wai (Request)
 
 class Auth kind where
-    login :: kind -> Request -> Maybe Account
+    login :: kind -> Request -> IO (Maybe Account)
 
 data Account = Account {name :: Text} deriving (Show, Eq, Ord)
 
@@ -23,7 +23,7 @@ type Permissions = M.Map Account Permission
 
 data Permission = Permission {canGet :: Bool, canRead :: Bool, canWrite :: Bool} deriving (Show, Eq)
 
-connect :: (Auth a) => a -> Request -> Maybe Account
+connect :: (Auth a) => a -> Request -> IO (Maybe Account)
 connect auth = login auth
 
 notConnected :: Account
