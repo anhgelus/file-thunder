@@ -29,6 +29,7 @@ library
       FileThunder.Auth
       FileThunder.Auth.Jwt
       FileThunder.Content
+      FileThunder.Cookie
       FileThunder.Storage
   other-modules:
       Paths_file_thunder
