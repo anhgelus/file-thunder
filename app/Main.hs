@@ -5,6 +5,8 @@
 module Main (main) where
 
 import FileThunder
+import FileThunder.Auth
+import qualified FileThunder.Storage as S
 
 import Control.Exception (throw)
 import Data.List (intercalate, uncons)
@@ -41,7 +43,7 @@ main = do
         Just w -> putStrLn $ intercalate "\n" w
         Nothing -> putStrLn "Config loaded"
     let cfg = config res
-    run 8000 $ app $ realPath (root cfg) (loadStorages $ storages cfg)
+    run 8000 (app $ S.realPath (root cfg) (loadStorages $ storages cfg))
 
 data ConfigRes = ConfigRes {config :: Config, warn :: Maybe [String]}
 
@@ -51,7 +53,7 @@ loadConfig file = case Toml.decode $ T.pack file of
     Success w v -> ConfigRes{config = v, warn = Just w}
     Failure err -> throw $ userError $ intercalate "\n" err
 
-loadStorages :: Maybe [CfgStorage] -> Storage
+loadStorages :: Maybe [CfgStorage] -> S.Storage
 loadStorages stors = case stors of
-    Just storage -> Map.fromList $ map (\s -> ((uri s), (path s))) storage
+    Just storage -> Map.fromList $ map (\s -> (uri s, S.createPlace (uri s) (path s) defaultPermissions)) storage
     Nothing -> Map.empty

@@ -1,11 +1,8 @@
 module FileThunder (
     app,
-    realPath,
-    Storage,
 ) where
 
-import Data.List (uncons, unsnoc)
-import qualified Data.Map.Strict as Map
+import Data.List (unsnoc)
 import qualified Data.Text as T
 import FileThunder.Content (ContentInfo (..), indexHtml)
 import Lucid (renderBS)
@@ -49,21 +46,6 @@ generateContentInfo acc ps = case ps of
     p : t ->
         doesFileExist p >>= \b -> generateContentInfo (ContentInfo{path = p, directory = not b} : acc) t
     [] -> pure acc
-
-type Uri = T.Text
-type Path = T.Text
-
-type Storage = Map.Map Uri Path
-
-realPath :: T.Text -> Storage -> Request -> [T.Text]
-realPath def stor req =
-    -- remove empty parts
-    let base = (filter (\t -> (T.length t) > 0) (T.splitOn "/" def))
-     in case uncons (pathInfo req) of
-            Just (key, t) -> case Map.lookup key stor of
-                Just v -> v : t
-                Nothing -> base ++ key : t
-            Nothing -> base ++ [""] -- normalize with trailing slash
 
 getContentType :: [T.Text] -> MimeType
 getContentType p = case unsnoc p of

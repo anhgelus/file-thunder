@@ -27,7 +27,9 @@ library
   exposed-modules:
       FileThunder
       FileThunder.Auth
+      FileThunder.Auth.Jwt
       FileThunder.Content
+      FileThunder.Storage
   other-modules:
       Paths_file_thunder
   autogen-modules:
@@ -43,6 +45,7 @@ library
     , base64
     , bytestring
     , containers
+    , cookie
     , crypton
     , directory
     , http-types
@@ -73,6 +76,7 @@ executable file-thunder-exe
     , base64
     , bytestring
     , containers
+    , cookie
     , crypton
     , directory
     , file-thunder
@@ -103,6 +107,7 @@ test-suite file-thunder-test
     , base64
     , bytestring
     , containers
+    , cookie
     , crypton
     , directory
     , file-thunder

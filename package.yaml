@@ -36,6 +36,7 @@ dependencies:
 - base64
 - time
 - memory
+- cookie
 
 ghc-options:
 - -Wall
