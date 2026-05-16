@@ -37,6 +37,7 @@ dependencies:
 - time
 - memory
 - cookie
+- vault
 
 ghc-options:
 - -Wall

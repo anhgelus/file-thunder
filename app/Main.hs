@@ -12,6 +12,7 @@ import Control.Exception (throw)
 import Data.List (intercalate, uncons)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
+import qualified Data.Vault.Lazy as V
 import GHC.Generics (Generic)
 import Network.Wai.Handler.Warp
 import System.Environment (getArgs)
@@ -43,7 +44,8 @@ main = do
         Just w -> putStrLn $ intercalate "\n" w
         Nothing -> putStrLn "Config loaded"
     let cfg = config res
-    run 8000 (app $ S.realPath (root cfg) (loadStorages $ storages cfg))
+    realPathKey <- V.newKey
+    run 8000 $ middlewareStorage realPathKey (root cfg) (loadStorages $ storages cfg) (app realPathKey)
 
 data ConfigRes = ConfigRes {config :: Config, warn :: Maybe [String]}
 
