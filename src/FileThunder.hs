@@ -1,11 +1,14 @@
 module FileThunder (
     app,
     middlewareStorage,
+    middlewareAuth,
 ) where
 
+import FileThunder.Auth
 import FileThunder.Content (ContentInfo (..), indexHtml)
-import FileThunder.Storage (Storage, realPath)
+import FileThunder.Storage (Storage, permissionsInSpace, placeFromReq, realPath)
 
+import Control.Exception (throw)
 import qualified Data.List as L
 import qualified Data.Text as T
 import qualified Data.Vault.Lazy as V
@@ -16,12 +19,16 @@ import Network.Mime (MimeType, defaultMimeLookup, defaultMimeType)
 import Network.Wai
 import System.Directory (doesFileExist, doesPathExist, listDirectory)
 
-app :: V.Key FilePath -> Application
-app k req respond = do
-    let p = V.lookup k (vault req)
+app :: V.Key FilePath -> V.Key Permission -> Application
+app k kPerm req respond = do
+    let v = vault req
+    let p = V.lookup k v
     case p of
         Nothing -> respond $ responseLBS status404 [] "not found"
         Just full -> do
+            let perm = case V.lookup kPerm v of
+                    Just pe -> pe
+                    Nothing -> error "Impossible state: cannot get permissions"
             exists <- doesFileExist full
             let handle = if exists then handleFile else handleDir
             handle req full >>= respond
@@ -39,7 +46,7 @@ handleFile _req p =
 
 handleDir :: ReqHandler
 handleDir req fullPath = do
-    contents <- listDirectory fullPath >>= (generateContentInfo [])
+    contents <- listDirectory fullPath >>= generateContentInfo []
     pure $ responseLBS status200 [] (renderBS $ indexHtml req contents)
 
 generateContentInfo :: [ContentInfo] -> [FilePath] -> IO [ContentInfo]
@@ -53,10 +60,31 @@ getContentType p = case L.unsnoc $ T.splitOn "/" (T.pack p) of
     Nothing -> defaultMimeType
     Just (_, f) -> if T.any (\c -> c == '.') f then defaultMimeLookup f else "text/plain"
 
-middlewareStorage :: V.Key FilePath -> T.Text -> Storage -> Middleware
-middlewareStorage k root stor next req resp = do
+middlewareStorage ::
+    V.Key Account ->
+    V.Key FilePath ->
+    V.Key Permission ->
+    T.Text ->
+    Storage ->
+    Permission ->
+    Middleware
+middlewareStorage kAcc k kPerm root stor def next req resp = do
     let v = (vault req)
     let rp = T.unpack $ T.intercalate "/" (realPath root stor req)
-    putStrLn rp
     exists <- doesPathExist rp
-    next req{vault = if exists then V.insert k rp v else v} resp
+    if not exists
+        then next req resp
+        else
+            let perm = case placeFromReq stor req of
+                    Just p -> permissionsInSpace p $ case V.lookup kAcc v of
+                        Nothing -> notConnected
+                        Just a -> a
+                    Nothing -> def
+             in next req{vault = V.insert kPerm perm $ V.insert k rp v} resp
+
+middlewareAuth :: (Auth a) => V.Key Account -> a -> Middleware
+middlewareAuth k auth next req resp = do
+    acc <- login auth req
+    case acc of
+        Nothing -> next req resp
+        Just c -> next req{vault = V.insert k c (vault req)} resp

@@ -3,9 +3,7 @@ module FileThunder.Auth (
     Account (..),
     Permission (..),
     Auth (login),
-    connect,
     notConnected,
-    defaultPermissions,
     privatePermissions,
     permissionsOf,
 ) where
@@ -23,14 +21,8 @@ type Permissions = M.Map Account Permission
 
 data Permission = Permission {canGet :: Bool, canRead :: Bool, canWrite :: Bool} deriving (Show, Eq)
 
-connect :: (Auth a) => a -> Request -> IO (Maybe Account)
-connect auth = login auth
-
 notConnected :: Account
 notConnected = Account{name = ""}
-
-defaultPermissions :: Permissions
-defaultPermissions = M.fromList [(notConnected, Permission{canGet = True, canRead = True, canWrite = False})]
 
 privatePermissions :: Account -> Permissions
 privatePermissions acc =

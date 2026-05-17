@@ -1,5 +1,14 @@
 root = "."
+jwtSecretKey = "uwu"
+
+[defaultPermissions]
+get = true
+read = true
+write = false
 
 [[storages]]
 uri = "private"
 path = "/home/anhgelus"
+
+[[storages.default]]
+read = false

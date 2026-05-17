@@ -7,6 +7,8 @@ module FileThunder.Storage (
     accountCanWrite,
     createPlace,
     createPrivatePlace,
+    placeFromReq,
+    permissionsInSpace,
 ) where
 
 import Data.List (uncons)
@@ -37,6 +39,14 @@ realPath def stor req =
                 Nothing -> base ++ key : t
             Nothing -> base ++ [""] -- normalize with trailing slash
 
+placeFromReq :: Storage -> Request -> Maybe Place
+placeFromReq stor req = case uncons (pathInfo req) of
+    Just (key, _) -> M.lookup key stor
+    Nothing -> Nothing
+
+permissionsInSpace :: Place -> Account -> Permission
+permissionsInSpace place acc = permissionsOf acc (permissions place)
+
 accountCanGet :: Place -> Account -> Bool
 accountCanGet = accountCan canGet
 
@@ -47,4 +57,4 @@ accountCanWrite :: Place -> Account -> Bool
 accountCanWrite = accountCan canWrite
 
 accountCan :: (Permission -> Bool) -> Place -> Account -> Bool
-accountCan get place acc = get $ permissionsOf acc (permissions place)
+accountCan get place acc = get $ permissionsInSpace place acc
