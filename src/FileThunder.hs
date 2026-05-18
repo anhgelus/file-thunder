@@ -6,14 +6,14 @@ module FileThunder (
 
 import FileThunder.Auth
 import FileThunder.Content (ContentInfo (..), indexHtml)
-import FileThunder.Storage (Storage, permissionsInSpace, placeFromReq, realPath)
+import FileThunder.Storage (Storage, fileKey, permissionsInSpace, placeFromReq, realPath)
 
-import Control.Exception (throw)
 import qualified Data.List as L
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Vault.Lazy as V
 import Lucid (renderBS)
-import Network.HTTP.Types (hContentType)
+import Network.HTTP.Types (Query, hContentType)
 import Network.HTTP.Types.Status
 import Network.Mime (MimeType, defaultMimeLookup, defaultMimeType)
 import Network.Wai
@@ -24,16 +24,38 @@ app k kPerm req respond = do
     let v = vault req
     let p = V.lookup k v
     case p of
-        Nothing -> respond $ responseLBS status404 [] "not found"
-        Just full -> do
+        Nothing -> respond notFound
+        Just full ->
             let perm = case V.lookup kPerm v of
                     Just pe -> pe
                     Nothing -> error "Impossible state: cannot get permissions"
-            exists <- doesFileExist full
-            let handle = if exists then handleFile else handleDir
-            handle req full >>= respond
+             in handleFound perm req full >>= respond
 
 type ReqHandler = Request -> FilePath -> IO Response
+
+handleFound :: Permission -> ReqHandler
+handleFound perm req p = do
+    exists <- doesFileExist p
+    if canRead perm
+        then (if exists then handleFile else handleDir) req p
+        else
+            if canGet perm && exists
+                then handleGet (queryString req) handleFile req p
+                else pure notFound
+
+handleGet :: Query -> ReqHandler -> ReqHandler
+handleGet q handler req p = do
+    key <- T.pack <$> fileKey p
+    case q of
+        (k, Just v) : t ->
+            if k == "k"
+                then if key == T.decodeUtf8 v then handler req p else pure notFound
+                else handleGet t handler req p
+        _ : t -> handleGet t handler req p
+        [] -> pure notFound
+
+notFound :: Response
+notFound = responseLBS status404 [] "not found"
 
 handleFile :: ReqHandler
 handleFile _req p =

@@ -9,8 +9,11 @@ module FileThunder.Storage (
     createPrivatePlace,
     placeFromReq,
     permissionsInSpace,
+    fileKey,
 ) where
 
+import Crypto.Hash (Digest, SHA256, hash)
+import qualified Data.ByteString.Char8 as B
 import Data.List (uncons)
 import qualified Data.Map as M
 import qualified Data.Text as T
@@ -58,3 +61,9 @@ accountCanWrite = accountCan canWrite
 
 accountCan :: (Permission -> Bool) -> Place -> Account -> Bool
 accountCan get place acc = get $ permissionsInSpace place acc
+
+fileKey :: FilePath -> IO String
+fileKey p = do
+    content <- B.readFile p
+    let (c, _) = splitAt 10 $ show (hash $ content :: Digest SHA256)
+    pure c

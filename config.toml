@@ -10,5 +10,5 @@ write = false
 uri = "private"
 path = "/home/anhgelus"
 
-[[storages.default]]
+[storages.permissions.default]
 read = false
